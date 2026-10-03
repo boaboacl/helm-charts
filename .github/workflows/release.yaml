@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'charts/**'
+      - '.github/workflows/release.yaml'
 
 jobs:
   release:
@@ -14,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -22,10 +23,13 @@ jobs:
         run: |
           git config user.name github-actions[bot]
           git config user.email github-actions[bot]@github.com
-  
+
 
       - name: Install Helm
-        uses: azure/setup-helm@v4
+        uses: azure/setup-helm@v5
+
+      - name: Add dependent chart repositories
+        run: helm repo add bjw-s https://bjw-s-labs.github.io/helm-charts/
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1
