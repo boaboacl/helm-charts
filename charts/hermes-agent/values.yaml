@@ -1,0 +1,111 @@
+controllers:
+  main:
+    type: deployment
+    strategy: Recreate
+    replicas: 1
+    containers:
+      main:
+        image:
+          repository: nousresearch/hermes-agent
+          tag: v2026.9.24
+          pullPolicy: IfNotPresent
+        # The image ENTRYPOINT is never overridden: the s6-overlay dispatcher must
+        # own PID 1 for the supervised services (gateway, dashboard, profiles).
+        args:
+          - gateway
+          - run
+        env:
+          TZ: America/Santiago
+          # Supervised web dashboard (port 9119). Auth is mandatory on non-loopback
+          # binds: set HERMES_DASHBOARD_BASIC_AUTH_USERNAME / _PASSWORD / _SECRET
+          # in the referenced Secret, or the dashboard fails closed at startup.
+          HERMES_DASHBOARD: "1"
+          HERMES_DASHBOARD_HOST: 0.0.0.0
+          # OpenAI-compatible API server (port 8642). Set API_SERVER_KEY (min 8
+          # chars) in the referenced Secret before exposing it beyond localhost.
+          API_SERVER_ENABLED: "true"
+          API_SERVER_HOST: 0.0.0.0
+        probes:
+          liveness:
+            enabled: true
+            type: tcp
+            port: 9119
+          readiness:
+            enabled: true
+            type: tcp
+            port: 9119
+          startup:
+            enabled: true
+            type: tcp
+            port: 9119
+            spec:
+              initialDelaySeconds: 30
+              failureThreshold: 30
+              periodSeconds: 10
+        resources:
+          requests:
+            cpu: "1"
+            memory: 1Gi
+          limits:
+            cpu: "2"
+            memory: 4Gi
+        securityContext:
+          readOnlyRootFilesystem: false
+
+# The image boots as root so its stage2 init can fix /opt/data ownership, then
+# s6-setuidgid drops every supervised process to the hermes user (UID 10000).
+defaultPodOptions:
+  securityContext:
+    runAsUser: 0
+    runAsGroup: 0
+
+persistence:
+  data:
+    enabled: true
+    retain: true
+    accessMode: ReadWriteOnce
+    size: 8Gi
+    globalMounts:
+      - path: /opt/data
+
+# Name of an existing Secret injected wholesale as env vars (model-provider API
+# keys, dashboard basic-auth credentials, API_SERVER_KEY, chat platform tokens).
+# Create it out-of-band, e.g.:
+#   kubectl -n hermes create secret generic hermes-agent-env --from-env-file=hermes.env
+# Set to "" to disable env injection entirely.
+secret:
+  existingSecret: hermes-agent-env
+
+service:
+  # Supervised web dashboard
+  main:
+    controller: main
+    ports:
+      http:
+        enabled: true
+        port: 9119
+        protocol: TCP
+        primary: true
+  # OpenAI-compatible API server (requires API_SERVER_ENABLED=true, which is
+  # set above; protect it with API_SERVER_KEY from the referenced Secret)
+  api:
+    controller: main
+    ports:
+      http:
+        enabled: true
+        port: 8642
+        protocol: TCP
+        primary: true
+
+ingress:
+  # Ingress for the dashboard. Disabled by default — enable and set a real host.
+  main:
+    enabled: false
+    hosts:
+      - host: hermes.chart.example
+        paths:
+          - path: /
+            pathType: Prefix
+            service:
+              identifier: main
+              port: 9119

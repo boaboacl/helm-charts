@@ -1,0 +1,5 @@
+{{- $main := get (.Values.controllers | default dict) "main" | default dict }}
+{{- $replicas := get $main "replicas" | default 1 | int }}
+{{- if gt $replicas 1 }}
+{{- fail (printf "hermes-agent supports exactly 1 replica (got %d): all state lives in a single SQLite database on the /opt/data volume and concurrent gateways corrupt it. Refusing to render." $replicas) }}
+{{- end }}

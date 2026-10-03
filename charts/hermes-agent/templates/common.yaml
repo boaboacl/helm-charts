@@ -1,0 +1,5 @@
+{{- if .Values.secret.existingSecret }}
+{{- $envFrom := list (dict "secretRef" (dict "name" .Values.secret.existingSecret)) }}
+{{- $_ := set .Values.controllers.main.containers.main "envFrom" $envFrom }}
+{{- end }}
+{{ include "bjw-s.common.loader.all" . }}
