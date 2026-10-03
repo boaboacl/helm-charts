@@ -46,6 +46,22 @@ entries:
     urls:
     - https://github.com/patricioperezv/helm-charts/releases/download/cheshirecat-0.1.0/cheshirecat-0.1.0.tgz
     version: 0.1.0
+  hermes-agent:
+  - apiVersion: v2
+    appVersion: v2026.9.24
+    created: "2026-10-03T23:36:00.006984573Z"
+    dependencies:
+    - name: common
+      repository: https://bjw-s-labs.github.io/helm-charts/
+      version: 5.2.1
+    description: NousResearch Hermes Agent - a containerized AI agent running as a
+      supervised gateway with a web dashboard and an OpenAI-compatible API server
+    digest: 060d482588276d3ff7cb99ea03d94d5e241e2bb13b9527541562fd97ca1bbfaf
+    name: hermes-agent
+    type: application
+    urls:
+    - https://github.com/boaboacl/helm-charts/releases/download/hermes-agent-0.1.0/hermes-agent-0.1.0.tgz
+    version: 0.1.0
   rathena:
   - apiVersion: v2
     appVersion: c313602b06f6c64fc22da13b2f72079aafbcf103
@@ -101,4 +117,4 @@ entries:
     urls:
     - https://github.com/patricioperezv/helm-charts/releases/download/rathena-0.1.0/rathena-0.1.0.tgz
     version: 0.1.0
-generated: "2024-11-04T23:59:47.377264244Z"
+generated: "2026-10-03T23:36:00.007001214Z"
