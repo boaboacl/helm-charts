@@ -29,7 +29,14 @@ jobs:
         uses: azure/setup-helm@v5
 
       - name: Add dependent chart repositories
-        run: helm repo add bjw-s https://bjw-s-labs.github.io/helm-charts/
+        run: |
+          for dir in charts/*/; do
+            helm dependency list --max-col-width 200 "$dir" 2>/dev/null | tail +2 | grep . | while read -r name version repo _; do
+              case "$repo" in oci://*) continue ;; esac
+              id=$(echo "$repo" | sed -E 's|^https?://||; s|/$||; s|[^A-Za-z0-9]|-|g')
+              helm repo add "$id" "$repo" 2>/dev/null || true
+            done
+          done
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1
