@@ -20,11 +20,13 @@ cat > hermes.env <<'EOF'
 # Required: at least one model provider key
 OPENAI_API_KEY=sk-...
 # ANTHROPIC_API_KEY=sk-ant-...
+# GLM_API_KEY=...          # z.ai / ZhipuAI GLM (provider: zai; the coding-plan
+#                           # endpoint is auto-detected from the key)
 
 # Required with default values (dashboard auth gate fails closed otherwise)
 HERMES_DASHBOARD_BASIC_AUTH_USERNAME=admin
-HERMES_DASHBOARD_BASIC_AUTH_PASSWORD=change-me
-HERMES_DASHBOARD_BASIC_AUTH_SECRET=openssl-rand-hex-32-output
+HERMES_DASHBOARD_BASIC_AUTH_PASSWORD=change-me        # what you type at login
+HERMES_DASHBOARD_BASIC_AUTH_SECRET=openssl-rand-base64-32-output  # session token-signing key; set it so logins survive pod restarts
 
 # Recommended before exposing the API service
 # API_SERVER_KEY=run-openssl-rand-hex-32
@@ -43,12 +45,32 @@ kubectl -n hermes create secret generic hermes-agent-env --from-env-file=hermes.
 
 ```bash
 helm install hermes ./charts/hermes-agent -n hermes
-# or from this repo once released:
-helm repo add pperez https://pperez.github.io/helm-charts
-helm install hermes pperez/hermes-agent -n hermes
+# or from this repo's published charts:
+helm repo add boaboacl https://boaboacl.github.io/helm-charts
+helm install hermes boaboacl/hermes-agent -n hermes
 ```
 
 Use a different Secret name via `secret.existingSecret=my-secret` (disable env injection with `secret.existingSecret=""`).
+
+> The model choice itself (`model.provider` / `model.default` in `config.yaml`) has no env var by design — set it after first boot via the dashboard (**Models → Change**) or `kubectl exec -it deploy/hermes-agent -- hermes model`. It persists in the PVC.
+
+## Deploying with ArgoCD (GitOps)
+
+This chart is deployed by [boaboa-iac](https://github.com/boaboacl/boaboa-iac) using the app-of-apps pattern:
+
+- `applications/hermes-agent/apps/helm.yaml` — ArgoCD Application sourcing this chart (`targetRevision: "0.*"`) with `valuesObject` for `secret.existingSecret` and the ingress
+- `applications/hermes-agent/resources/` — a SealedSecret (sealed for the target namespace) replacing the manual `kubectl create secret` step:
+
+```bash
+kubectl -n applications create secret generic hermes-agent-env \
+  --from-env-file=hermes.env --dry-run=client -o yaml \
+  | kubeseal --controller-namespace kube-system \
+      --controller-name sealed-secrets-controller \
+      --namespace applications -o yaml \
+  > hermes-agent-env-sealed.yaml
+```
+
+Keep channel tokens in the SealedSecret only — env vars override whatever the dashboard's QR-pairing flows write to `/opt/data/.env`.
 
 ## Access
 
