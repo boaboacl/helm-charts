@@ -103,12 +103,14 @@ No test framework exists in this repo; keep verification lightweight and manual:
 
 ## Success Criteria
 
-- [ ] `helm lint` + `helm template` clean with defaults; render includes Deployment(args: gateway run), Services 9119/8642, PVC at /opt/data, envFrom Secret
-- [ ] Setting replicas > 1 makes `helm template` fail with an explanatory error
-- [ ] With `secret.existingSecret` pointing at a Secret containing `HERMES_DASHBOARD_BASIC_AUTH_USERNAME`/`_PASSWORD` and a model-provider key, the deployed pod reaches Running and the dashboard authenticates
-- [ ] Pod restart (delete pod) preserves sessions/config (PVC `retain`)
-- [ ] README documents the env-only bootstrap: required vars (>=1 model provider key, dashboard basic-auth trio), optional vars (chat platform tokens, `API_SERVER_KEY` >= 8 chars), secret creation command
-- [ ] No secret material anywhere in the chart or repo
+- [x] `helm lint` + `helm template` clean with defaults; render includes Deployment(args: gateway run), Services 9119/8642, PVC at /opt/data, envFrom Secret
+- [x] Setting replicas > 1 makes `helm template` fail with an explanatory error
+- [x] With `secret.existingSecret` pointing at a Secret containing `HERMES_DASHBOARD_BASIC_AUTH_USERNAME`/`_PASSWORD` and a model-provider key, the deployed pod reaches Running and the dashboard authenticates
+- [x] Pod restart (delete pod) preserves sessions/config (PVC `retain`)
+- [x] README documents the env-only bootstrap: required vars (>=1 model provider key, dashboard basic-auth trio), optional vars (chat platform tokens, `API_SERVER_KEY` >= 8 chars), secret creation command
+- [x] No secret material anywhere in the chart or repo
+
+**Outcome (2026-10-04):** all criteria met. Deployed via ArgoCD from boaboa-iac (SealedSecret `hermes-agent-env`, namespace `applications`, traefik ingress `hermes.k8s.boaboa.org`); gateway s6-supervised, auth gate verified fail-closed, restart persistence verified. Model provider in production: z.ai (GLM) — first-class `zai` provider, coding-plan endpoint auto-detected.
 
 ## Open Questions
 
