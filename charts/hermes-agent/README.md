@@ -50,7 +50,32 @@ helm repo add boaboacl https://boaboacl.github.io/helm-charts
 helm install hermes boaboacl/hermes-agent -n hermes
 ```
 
-Use a different Secret name via `secret.existingSecret=my-secret` (disable env injection with `secret.existingSecret=""`).
+Enable env injection by setting `secret.existingSecret` to your Secret's name — the default `""` disables it entirely.
+
+## Site config is consumer-supplied
+
+This chart ships no site identity — no `TZ`, no hostnames, no Secret names as
+live defaults (see [docs/CHART_CONVENTIONS.md](../../docs/CHART_CONVENTIONS.md)).
+A bare install boots the gateway but the dashboard fails closed until
+credentials arrive (set `secret.existingSecret` to a Secret containing at
+least `HERMES_DASHBOARD_BASIC_AUTH_*`). Everything deployment-specific is set
+by the consumer; the homeserver wires it in
+[boaboa-iac](https://github.com/boaboacl/boaboa-iac)'s Argo `valuesObject`:
+
+```yaml
+controllers:
+  main:
+    containers:
+      main:
+        env:
+          TZ: America/Santiago        # site locale
+secret:
+  existingSecret: hermes-agent-env    # site Secret name
+ingress:
+  main:
+    enabled: true
+    # ...host, className, TLS per site
+```
 
 > The model choice itself (`model.provider` / `model.default` in `config.yaml`) has no env var by design — set it after first boot via the dashboard (**Models → Change**) or `kubectl exec -it deploy/hermes-agent -- hermes model`. It persists in the PVC.
 
@@ -104,10 +129,10 @@ ingress:
 | Key | Default | Description |
 |---|---|---|
 | `controllers.main.containers.main.image.tag` | `v2026.9.24` | Pinned upstream image tag (CalVer) |
-| `secret.existingSecret` | `hermes-agent-env` | Existing Secret injected as env via `envFrom` |
+| `secret.existingSecret` | `""` | Existing Secret injected as env via `envFrom` (disabled until set) |
 | `persistence.data.size` | `8Gi` | Size of the `/opt/data` PVC (all agent state) |
 | `persistence.data.retain` | `true` | Keep the PVC on uninstall |
-| `controllers.main.containers.main.env` | see `values.yaml` | `HERMES_DASHBOARD`, `API_SERVER_*`, `TZ` |
+| `controllers.main.containers.main.env` | see `values.yaml` | `HERMES_DASHBOARD`, `API_SERVER_*` (site env like `TZ` is consumer-supplied) |
 | `service.main.ports.http.port` | `9119` | Dashboard |
 | `service.api.ports.http.port` | `8642` | OpenAI-compatible API |
 | `ingress.main.enabled` | `false` | Dashboard Ingress (see snippet above) |
