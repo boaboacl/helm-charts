@@ -40,5 +40,10 @@ jobs:
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1
+        with:
+          # Skip chart versions whose GitHub release already exists instead of
+          # failing the run (a version-bump-less push re-attempts the latest
+          # release and would otherwise abort before packaging newer charts).
+          skip_existing: true
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
