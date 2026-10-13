@@ -65,6 +65,21 @@ entries:
   paperless-ngx:
   - apiVersion: v2
     appVersion: 2.20.15
+    created: "2026-10-13T05:40:44.308431876Z"
+    dependencies:
+    - name: common
+      repository: https://bjw-s-labs.github.io/helm-charts/
+      version: 5.2.1
+    description: Paperless-ngx - document management system that transforms physical
+      documents into a searchable online archive, with a bundled Redis instance
+    digest: 6df3db50810df0cb262629810e1349719dd9cf4b63c864ebaaecc2945c245c75
+    name: paperless-ngx
+    type: application
+    urls:
+    - https://github.com/boaboacl/helm-charts/releases/download/paperless-ngx-0.1.1/paperless-ngx-0.1.1.tgz
+    version: 0.1.1
+  - apiVersion: v2
+    appVersion: 2.20.15
     created: "2026-10-13T05:32:45.292734798Z"
     dependencies:
     - name: common
@@ -133,4 +148,4 @@ entries:
     urls:
     - https://github.com/patricioperezv/helm-charts/releases/download/rathena-0.1.0/rathena-0.1.0.tgz
     version: 0.1.0
-generated: "2026-10-13T05:32:45.29275007Z"
+generated: "2026-10-13T05:40:44.308451022Z"
