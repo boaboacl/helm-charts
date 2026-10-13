@@ -3,7 +3,7 @@ entries:
   actual-budget:
   - apiVersion: v2
     appVersion: 24.9.0
-    created: "2024-10-02T02:04:15.368174074Z"
+    created: '2024-10-02T02:04:15.368174074Z'
     dependencies:
     - name: actualserver
       repository: oci://tccr.io/truecharts
@@ -15,41 +15,10 @@ entries:
     urls:
     - https://github.com/patricioperezv/helm-charts/releases/download/actual-budget-0.1.0/actual-budget-0.1.0.tgz
     version: 0.1.0
-  actualrestapi:
-  - apiVersion: v2
-    appVersion: 0.14.0
-    created: "2024-11-04T23:59:47.37725135Z"
-    dependencies:
-    - name: common
-      repository: oci://tccr.io/truecharts
-      version: 25.1.5
-    description: Local rest api for actual budget
-    digest: ab7473bb5ccaacb245638bd0d145576fe0f18846361df27e4fae33c378ba8afe
-    name: actualrestapi
-    type: application
-    urls:
-    - https://github.com/patricioperezv/helm-charts/releases/download/actualrestapi-0.1.0/actualrestapi-0.1.0.tgz
-    version: 0.1.0
-  cheshirecat:
-  - apiVersion: v2
-    appVersion: 1.7.1
-    created: "2024-10-27T02:44:11.623891431Z"
-    dependencies:
-    - name: common
-      repository: oci://tccr.io/truecharts
-      version: 25.0.1
-    description: The Cheshire Cat is an open-source, hackable and production-ready
-      framework that allows developing AI agents on top of Large Language Models
-    digest: 69c945d522b3a21fb42fc296d241c1dd4088b2142be6bb0b6c4cecdb0ee359c8
-    name: cheshirecat
-    type: application
-    urls:
-    - https://github.com/patricioperezv/helm-charts/releases/download/cheshirecat-0.1.0/cheshirecat-0.1.0.tgz
-    version: 0.1.0
   hermes-agent:
   - apiVersion: v2
     appVersion: v2026.9.24
-    created: "2026-10-13T06:24:38.177580665Z"
+    created: '2026-10-13T06:24:38.177580665Z'
     dependencies:
     - name: common
       repository: https://bjw-s-labs.github.io/helm-charts/
@@ -64,7 +33,7 @@ entries:
     version: 0.2.0
   - apiVersion: v2
     appVersion: v2026.9.24
-    created: "2026-10-03T23:36:00.006984573Z"
+    created: '2026-10-03T23:36:00.006984573Z'
     dependencies:
     - name: common
       repository: https://bjw-s-labs.github.io/helm-charts/
@@ -80,7 +49,7 @@ entries:
   paperless-ngx:
   - apiVersion: v2
     appVersion: 2.20.15
-    created: "2026-10-13T06:35:47.981150643Z"
+    created: '2026-10-13T06:35:47.981150643Z'
     dependencies:
     - name: common
       repository: https://bjw-s-labs.github.io/helm-charts/
@@ -95,7 +64,7 @@ entries:
     version: 0.2.0
   - apiVersion: v2
     appVersion: 2.20.15
-    created: "2026-10-13T05:40:44.308431876Z"
+    created: '2026-10-13T05:40:44.308431876Z'
     dependencies:
     - name: common
       repository: https://bjw-s-labs.github.io/helm-charts/
@@ -110,7 +79,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 2.20.15
-    created: "2026-10-13T05:32:45.292734798Z"
+    created: '2026-10-13T05:32:45.292734798Z'
     dependencies:
     - name: common
       repository: https://bjw-s-labs.github.io/helm-charts/
@@ -123,59 +92,4 @@ entries:
     urls:
     - https://github.com/boaboacl/helm-charts/releases/download/paperless-ngx-0.1.0/paperless-ngx-0.1.0.tgz
     version: 0.1.0
-  rathena:
-  - apiVersion: v2
-    appVersion: c313602b06f6c64fc22da13b2f72079aafbcf103
-    created: "2024-10-23T23:08:55.272955816Z"
-    dependencies:
-    - name: common
-      repository: oci://tccr.io/truecharts
-      version: 25.0.1
-    - condition: mariadb.enabled
-      name: mariadb
-      repository: oci://tccr.io/truecharts
-      version: 15.4.1
-    description: Rathena deployment using TrueCharts common library
-    digest: abad0fda4794b96b297ce0ef1638e96eba99e75ed0b440103753c43d58c51bdb
-    name: rathena
-    type: application
-    urls:
-    - https://github.com/patricioperezv/helm-charts/releases/download/rathena-0.2.0/rathena-0.2.0.tgz
-    version: 0.2.0
-  - apiVersion: v2
-    appVersion: a687ddeb854de4c9207d21dfbaab7f6b83944165
-    created: "2024-10-23T03:37:53.102102019Z"
-    dependencies:
-    - name: common
-      repository: oci://tccr.io/truecharts
-      version: 25.0.1
-    - condition: mariadb.enabled
-      name: mariadb
-      repository: oci://tccr.io/truecharts
-      version: 15.4.1
-    description: Rathena deployment using TrueCharts common library
-    digest: e36707c3331e2947076bd71f1a687c4d26fd2c4a593eaa6aeaff52fdd4747801
-    name: rathena
-    type: application
-    urls:
-    - https://github.com/patricioperezv/helm-charts/releases/download/rathena-0.1.1/rathena-0.1.1.tgz
-    version: 0.1.1
-  - apiVersion: v2
-    appVersion: a687ddeb854de4c9207d21dfbaab7f6b83944165
-    created: "2024-10-23T02:19:41.007683162Z"
-    dependencies:
-    - name: common
-      repository: oci://tccr.io/truecharts
-      version: 25.0.1
-    - condition: mariadb.enabled
-      name: mariadb
-      repository: oci://tccr.io/truecharts
-      version: 15.4.1
-    description: A Helm chart for Kubernetes
-    digest: 89a7e517c25b3e34959f4318e2c9f6ee52b74d0cbc5b3393a75bda0fb2938f55
-    name: rathena
-    type: application
-    urls:
-    - https://github.com/patricioperezv/helm-charts/releases/download/rathena-0.1.0/rathena-0.1.0.tgz
-    version: 0.1.0
-generated: "2026-10-13T06:35:47.981177623Z"
+generated: '2026-10-13T06:35:47.981177623Z'
