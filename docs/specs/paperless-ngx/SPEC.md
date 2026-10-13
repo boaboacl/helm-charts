@@ -8,7 +8,7 @@ Create a new Helm chart `charts/paperless-ngx` that deploys [Paperless-ngx](http
 
 **Deployment shape (per current live manifests, preserved 1:1 in behavior):** a single paperless-ngx web/document container (port 8000) backed by a bare `redis:7-alpine` instance (port 6379, no persistence), three RWO volumes (`media`, `data`, `export`), PostgreSQL on the CNPG cluster with credentials delivered by a Crossplane-managed connection Secret, and SSO via Authentik OIDC (credentials arrive through pre-created SealedSecrets).
 
-**Data policy (explicit user decision):** the cutover starts from **fresh volumes**. Existing documents are abandoned; the old PVCs survive Argo deletion (`Delete=false` annotation) until manually reclaimed. The chart therefore always creates its own PVCs — no `existingClaim` adoption path is required.
+**Data policy (explicit user decision):** the cutover starts from **fresh volumes**. Existing documents are abandoned; observed outcome — Argo pruned the legacy PVCs during cutover (`Delete=false` guards app-deletion cascades, not pruning). The chart therefore always creates its own PVCs — no `existingClaim` adoption path is required.
 
 **Success looks like:** `helm install` of the chart (plus the pre-created SealedSecrets and the Crossplane DB objects) yields a running paperless-ngx reachable over the Traefik ingress, with SSO-only login, no secrets committed to the repo, and fresh PVCs owned by the chart.
 

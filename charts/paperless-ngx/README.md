@@ -95,7 +95,7 @@ All other options follow the [common library values](https://github.com/bjw-s-la
 ## Constraints
 
 - **Exactly one replica.** All state lives on single RWO volumes and the bundled Redis is a single instance. The chart refuses to render with `controllers.main.replicas > 1`.
-- **Fresh-volume policy.** The cutover from the previous raw-manifest deployment intentionally started from fresh PVCs; the previous volumes (`paperless-media`/`-data`/`-export`) survived Argo deletion via the `Delete=false` sync option and must be reclaimed manually once no longer needed.
+- **Fresh-volume policy.** The cutover from the previous raw-manifest deployment intentionally started from fresh PVCs (2026-10). Note: Argo pruned the legacy volumes during the cutover — the `Delete=false` sync option guards app-deletion cascades, not source-switch pruning.
 - **Migrations on boot.** First boot (or a version bump) runs Django migrations on the database before the app serves — the startup probe allows up to 5 minutes.
 - The image manages its own privilege handling at startup (volume ownership fixes); no explicit `securityContext` is imposed.
 
