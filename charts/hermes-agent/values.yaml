@@ -15,7 +15,6 @@ controllers:
           - gateway
           - run
         env:
-          TZ: America/Santiago
           # Supervised web dashboard (port 9119). Auth is mandatory on non-loopback
           # binds: set HERMES_DASHBOARD_BASIC_AUTH_USERNAME / _PASSWORD / _SECRET
           # in the referenced Secret, or the dashboard fails closed at startup.
@@ -70,11 +69,13 @@ persistence:
 
 # Name of an existing Secret injected wholesale as env vars (model-provider API
 # keys, dashboard basic-auth credentials, API_SERVER_KEY, chat platform tokens).
-# Create it out-of-band, e.g.:
-#   kubectl -n hermes create secret generic hermes-agent-env --from-env-file=hermes.env
-# Set to "" to disable env injection entirely.
+# Disabled by default — the chart never assumes a site-specific Secret name.
+# Create the Secret out-of-band, e.g.:
+#   kubectl create secret generic hermes-agent-env --from-env-file=hermes.env
+# then set its name here. Consumer-supplied config (TZ, ingress, vault mounts)
+# also arrives via values — see docs/CHART_CONVENTIONS.md.
 secret:
-  existingSecret: hermes-agent-env
+  existingSecret: ""
 
 service:
   # Supervised web dashboard
