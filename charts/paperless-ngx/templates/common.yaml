@@ -1,0 +1,28 @@
+{{- /* Initialize the common library first so library helpers (fullname, etc.)
+resolve against merged dependency defaults. */ -}}
+{{- include "bjw-s.common.loader.init" . }}
+
+{{- /*
+Inject envFrom entries for every Secret named in secret.existingSecrets.
+The chart never creates Secrets from values and no secret material belongs
+in values.yaml.
+*/ -}}
+{{- $secretValues := get .Values "secret" | default dict }}
+{{- /* `without` filters empty names, e.g. from `--set secret.existingSecrets={}`. */ -}}
+{{- $existingSecrets := without (get $secretValues "existingSecrets" | default list) "" }}
+{{- if $existingSecrets }}
+{{- $envFrom := list }}
+{{- range $secretName := $existingSecrets }}
+  {{- $envFrom = append $envFrom (dict "secretRef" (dict "name" $secretName)) }}
+{{- end }}
+{{- $_ := set .Values.controllers.main.containers.main "envFrom" $envFrom }}
+{{- end }}
+
+{{- /*
+Derive PAPERLESS_REDIS from the chart fullname so the chart stays
+release-name-proof (the bundled redis Service is <fullname>-redis).
+*/ -}}
+{{- $fullname := include "bjw-s.common.lib.chart.names.fullname" . }}
+{{- $_ := set .Values.controllers.main.containers.main.env "PAPERLESS_REDIS" (printf "redis://%s-redis:6379" $fullname) }}
+
+{{- include "bjw-s.common.loader.generate" . }}

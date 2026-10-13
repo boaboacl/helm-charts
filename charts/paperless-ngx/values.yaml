@@ -1,0 +1,162 @@
+controllers:
+  main:
+    type: deployment
+    # RWO volumes (media/data/export) forbid a rolling two-pod overlap.
+    strategy: Recreate
+    replicas: 1
+    containers:
+      main:
+        image:
+          repository: ghcr.io/paperless-ngx/paperless-ngx
+          tag: 2.20.15
+          pullPolicy: IfNotPresent
+        env:
+          TZ: America/Santiago
+          PAPERLESS_URL: https://paperless.k8s.boaboa.org
+          # PAPERLESS_REDIS is derived in templates/common.yaml from the chart
+          # fullname (redis://<fullname>-redis:6379) so it stays correct for
+          # any release name.
+          PAPERLESS_DBENGINE: postgres
+          PAPERLESS_DBHOST: pgsql-cluster-apps-rw.applications.svc.cluster.local
+          PAPERLESS_DBNAME: paperless
+          # Credentials from the Crossplane-managed connection Secret
+          # (postgresql.sql.crossplane.io Role writeConnectionSecretToRef).
+          PAPERLESS_DBUSER:
+            valueFrom:
+              secretKeyRef:
+                name: paperless-pgsql-conn
+                key: username
+          PAPERLESS_DBPASS:
+            valueFrom:
+              secretKeyRef:
+                name: paperless-pgsql-conn
+                key: password
+          PAPERLESS_OCR_LANGUAGES: spa
+          PAPERLESS_OCR_LANGUAGE: eng+spa
+          # Authentik OIDC via django-allauth; provider settings arrive
+          # through the paperless-socialaccount Secret (envFrom below).
+          PAPERLESS_APPS: allauth.socialaccount.providers.openid_connect
+          PAPERLESS_DISABLE_REGULAR_LOGIN: "true"
+          PAPERLESS_REDIRECT_LOGIN_TO_SSO: "true"
+          PAPERLESS_SOCIAL_ACCOUNT_SYNC_GROUPS: "true"
+        probes:
+          # First boot runs migrations on empty volumes, so allow a generous
+          # startup window before liveness/readiness kick in.
+          startup:
+            enabled: true
+            type: HTTP
+            path: /
+            port: 8000
+            spec:
+              initialDelaySeconds: 10
+              periodSeconds: 10
+              failureThreshold: 30
+          readiness:
+            enabled: true
+            type: HTTP
+            path: /
+            port: 8000
+            spec:
+              periodSeconds: 10
+          liveness:
+            enabled: true
+            type: HTTP
+            path: /
+            port: 8000
+            spec:
+              periodSeconds: 30
+  redis:
+    type: deployment
+    replicas: 1
+    containers:
+      redis:
+        image:
+          repository: redis
+          tag: 7-alpine
+          pullPolicy: IfNotPresent
+
+# Names of existing Secrets injected wholesale as env vars via envFrom
+# (Django SECRET_KEY, admin bootstrap credentials, Authentik socialaccount
+# provider settings). Create them out-of-band (in boaboa-iac they ship as
+# SealedSecrets). Set to [] to disable env injection entirely.
+secret:
+  existingSecrets:
+    - paperless-secret-key
+    - paperless-admin
+    - paperless-socialaccount
+
+service:
+  # Paperless-ngx web UI / API
+  main:
+    controller: main
+    ports:
+      http:
+        enabled: true
+        port: 8000
+        protocol: TCP
+        primary: true
+  # Task queue broker consumed by paperless only; not exposed externally
+  redis:
+    controller: redis
+    ports:
+      redis:
+        enabled: true
+        port: 6379
+        protocol: TCP
+        primary: true
+
+persistence:
+  # Scanned/consumed documents and thumbnails
+  media:
+    enabled: true
+    retain: true
+    accessMode: ReadWriteOnce
+    size: 20Gi
+    globalMounts:
+      - path: /usr/src/paperless/media
+  # SQLite-less app state: index, search index, config
+  data:
+    enabled: true
+    retain: true
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    globalMounts:
+      - path: /usr/src/paperless/data
+  # Export target for document_exporter
+  export:
+    enabled: true
+    retain: true
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    globalMounts:
+      - path: /usr/src/paperless/export
+
+ingress:
+  # Disabled by default — enable and set a real host, e.g. via Argo valuesObject:
+  # ingress:
+  #   main:
+  #     enabled: true
+  #     className: traefik
+  #     annotations:
+  #       traefik.ingress.kubernetes.io/router.tls: "true"
+  #     hosts:
+  #       - host: paperless.k8s.boaboa.org
+  #         paths:
+  #           - path: /
+  #             pathType: Prefix
+  #             service:
+  #               identifier: main
+  #               port: 8000
+  #     tls:
+  #       - hosts:
+  #           - paperless.k8s.boaboa.org
+  main:
+    enabled: false
+    hosts:
+      - host: paperless.chart.example
+        paths:
+          - path: /
+            pathType: Prefix
+            service:
+              identifier: main
+              port: 8000
