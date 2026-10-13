@@ -62,6 +62,22 @@ entries:
     urls:
     - https://github.com/boaboacl/helm-charts/releases/download/hermes-agent-0.1.0/hermes-agent-0.1.0.tgz
     version: 0.1.0
+  paperless-ngx:
+  - apiVersion: v2
+    appVersion: 2.20.15
+    created: "2026-10-13T05:32:45.292734798Z"
+    dependencies:
+    - name: common
+      repository: https://bjw-s-labs.github.io/helm-charts/
+      version: 5.2.1
+    description: Paperless-ngx - document management system that transforms physical
+      documents into a searchable online archive, with a bundled Redis instance
+    digest: 877d9b113dbc47fd8e996cb2b3443d5a2fdd514e511a6ce2837a0263121c1935
+    name: paperless-ngx
+    type: application
+    urls:
+    - https://github.com/boaboacl/helm-charts/releases/download/paperless-ngx-0.1.0/paperless-ngx-0.1.0.tgz
+    version: 0.1.0
   rathena:
   - apiVersion: v2
     appVersion: c313602b06f6c64fc22da13b2f72079aafbcf103
@@ -117,4 +133,4 @@ entries:
     urls:
     - https://github.com/patricioperezv/helm-charts/releases/download/rathena-0.1.0/rathena-0.1.0.tgz
     version: 0.1.0
-generated: "2026-10-03T23:36:00.007001214Z"
+generated: "2026-10-13T05:32:45.29275007Z"
