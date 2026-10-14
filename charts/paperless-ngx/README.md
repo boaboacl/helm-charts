@@ -119,7 +119,7 @@ ingress:
 
 | Key | Default | Description |
 |---|---|---|
-| `controllers.main.containers.main.image.tag` | `2.20.15` | Pinned upstream image tag |
+| `controllers.main.containers.main.image.tag` | `3.3.1` | Pinned upstream image tag |
 | `secret.existingSecrets` | `[]` | Existing Secrets injected via `envFrom` (disabled until set) |
 | `controllers.main.containers.main.env` | see `values.yaml` | empty by default — SQLite + bundled redis; DB/auth/TZ wiring is consumer-supplied (examples commented in `values.yaml`) |
 | `persistence.media.size` | `20Gi` | Scanned documents and thumbnails (`/usr/src/paperless/media`) |

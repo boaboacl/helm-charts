@@ -8,7 +8,7 @@ controllers:
       main:
         image:
           repository: ghcr.io/paperless-ngx/paperless-ngx
-          tag: 2.20.15
+          tag: 3.3.1
           pullPolicy: IfNotPresent
         # Empty map keeps the PAPERLESS_REDIS derivation in templates/common.yaml
         # working; all entries below are consumer-supplied examples.
