@@ -18,11 +18,15 @@ controllers:
           # Passed verbatim to the chromium binary by the image init. The
           # dedicated --user-data-dir is load-bearing: Chrome 136+ silently
           # ignores --remote-debugging-port on the default profile directory.
-          # Note: --remote-debugging-address is deliberately absent - desktop
-          # chromium ignores it and always binds DevTools to 127.0.0.1, which
-          # is why the cdp-proxy sidecar exists.
+          # --remote-debugging-address is ALSO load-bearing, but not the way
+          # docs suggest: this build ignores the address (DevTools always
+          # binds 127.0.0.1 - hence the cdp-proxy sidecar), yet without the
+          # flag chrome 155 does not open the port at all (verified live:
+          # flag present = listening on 127.0.0.1:9222, flag absent = nothing
+          # on 9222).
           CHROME_CLI: >-
             --remote-debugging-port=9222
+            --remote-debugging-address=0.0.0.0
             --user-data-dir=/config/chrome-profile
             --no-first-run
             --no-default-browser-check
