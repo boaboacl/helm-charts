@@ -18,12 +18,12 @@ controllers:
           # Passed verbatim to the chromium binary by the image init. The
           # dedicated --user-data-dir is load-bearing: Chrome 136+ silently
           # ignores --remote-debugging-port on the default profile directory.
-          # --remote-debugging-address is ALSO load-bearing, but not the way
-          # docs suggest: this build ignores the address (DevTools always
-          # binds 127.0.0.1 - hence the cdp-proxy sidecar), yet without the
-          # flag chrome 155 does not open the port at all (verified live:
-          # flag present = listening on 127.0.0.1:9222, flag absent = nothing
-          # on 9222).
+          # --remote-debugging-address: the address itself is ignored (this
+          # build always binds DevTools to 127.0.0.1 - hence the cdp-proxy
+          # sidecar). Keep the flag: it mirrors the first-known-good config;
+          # a 0.2.0 removal attempt coincided with an unrelated failure (see
+          # configMaps.chromium-init for the real cause) and reverting the
+          # flag is not worth another experiment.
           CHROME_CLI: >-
             --remote-debugging-port=9222
             --remote-debugging-address=0.0.0.0
@@ -124,6 +124,19 @@ persistence:
         cdp-proxy:
           - path: /etc/nginx/conf.d/default.conf
             subPath: default.conf
+  # Singleton cleanup script for the chromium profile (see
+  # configMaps.chromium-init), mounted into the main container's
+  # linuxserver custom init dir. defaultMode 493 = 0755: the hook runner
+  # skips non-executable files.
+  chromium-init:
+    type: configMap
+    identifier: chromium-init
+    defaultMode: 493
+    advancedMounts:
+      main:
+        main:
+          - path: /custom-cont-init.d/99-clean-singleton.sh
+            subPath: 99-clean-singleton.sh
 
 # nginx config for the cdp-proxy sidecar (see
 # controllers.main.containers.cdp-proxy).
@@ -143,10 +156,12 @@ configMaps:
             location / {
                 proxy_pass http://127.0.0.1:9222;
                 proxy_http_version 1.1;
-                # Chromium rejects non-IP/localhost Host headers; 127.0.0.1
-                # also makes it echo that host into webSocketDebuggerUrl,
-                # which the sub_filter below rewrites back for clients.
-                proxy_set_header Host 127.0.0.1;
+                # Chromium rejects non-IP/localhost Host headers. The :9222
+                # suffix is load-bearing: chrome echoes the Host header
+                # VERBATIM into webSocketDebuggerUrl, so a portless Host
+                # yields ws://127.0.0.1/devtools/... which the sub_filter
+                # patterns below do not match.
+                proxy_set_header Host 127.0.0.1:9222;
                 proxy_set_header Upgrade $http_upgrade;
                 proxy_set_header Connection $connection_upgrade;
                 # CDP sessions are long-lived and can sit idle for minutes.
@@ -159,6 +174,21 @@ configMaps:
                 sub_filter 'ws://localhost:9222' 'ws://$http_host';
             }
         }
+  # Runs at container init (linuxserver custom-cont-init.d hook) as root,
+  # before the desktop session launches chromium.
+  chromium-init:
+    enabled: true
+    data:
+      99-clean-singleton.sh: |
+        #!/usr/bin/env bash
+        # Stale chromium Singleton* files from an unclean pod shutdown make
+        # the next chrome boot start WITHOUT the DevTools listener (verified
+        # live: lock present = nothing on 9222, lock absent = listener up).
+        # The image only cleans locks in the default profile dir, not in our
+        # --user-data-dir. The profile is single-writer (replicas: 1,
+        # Recreate strategy), so any lock present at boot is stale by
+        # definition - safe to remove unconditionally.
+        rm -f /config/chrome-profile/Singleton* 2>/dev/null || true
 
 service:
   # Selkies web UI (the browser streamed to a human's browser). Expose through
