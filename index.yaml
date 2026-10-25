@@ -3,6 +3,22 @@ entries:
   browser:
   - apiVersion: v2
     appVersion: latest
+    created: "2026-10-25T18:52:00.762361406Z"
+    dependencies:
+    - name: common
+      repository: https://bjw-s-labs.github.io/helm-charts/
+      version: 5.2.1
+    description: linuxserver/chromium - a real, persistent Chromium with a CDP endpoint
+      (remote debugging) for agent/CLI automation and a Selkies web UI for human handoff
+      (logins, 2FA, captchas)
+    digest: 414e4da295fe9cbfa1401ebc4559c03da3e1d1f702a8d8c97c57fd1bfd0ebc65
+    name: browser
+    type: application
+    urls:
+    - https://github.com/boaboacl/helm-charts/releases/download/browser-0.2.0/browser-0.2.0.tgz
+    version: 0.2.0
+  - apiVersion: v2
+    appVersion: latest
     created: "2026-10-25T17:55:54.232313306Z"
     dependencies:
     - name: common
@@ -109,4 +125,4 @@ entries:
     urls:
     - https://github.com/boaboacl/helm-charts/releases/download/paperless-ngx-0.1.0/paperless-ngx-0.1.0.tgz
     version: 0.1.0
-generated: "2026-10-25T17:55:54.232324911Z"
+generated: "2026-10-25T18:52:00.762382426Z"
