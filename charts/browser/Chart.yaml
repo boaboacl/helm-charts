@@ -1,0 +1,21 @@
+apiVersion: v2
+name: browser
+description: linuxserver/chromium - a real, persistent Chromium with a CDP endpoint (remote debugging) for agent/CLI automation and a Selkies web UI for human handoff (logins, 2FA, captchas)
+
+type: application
+
+# Chart version: bump on every chart/template change.
+version: 0.1.0
+
+# Not used by the common library to derive the image tag - it is set
+# explicitly in values.yaml (the image ships a moving `latest` tag).
+appVersion: "latest"
+
+dependencies:
+  - name: common
+    version: 5.2.1
+    repository: https://bjw-s-labs.github.io/helm-charts/
+    condition: ""
+    alias: ""
+    tags: []
+    import-values: []
