@@ -5,7 +5,7 @@ description: linuxserver/chromium - a real, persistent Chromium with a CDP endpo
 type: application
 
 # Chart version: bump on every chart/template change.
-version: 0.2.0
+version: 0.2.1
 
 # Not used by the common library to derive the image tag - it is set
 # explicitly in values.yaml (the image ships a moving `latest` tag).
