@@ -18,10 +18,11 @@ controllers:
           # Passed verbatim to the chromium binary by the image init. The
           # dedicated --user-data-dir is load-bearing: Chrome 136+ silently
           # ignores --remote-debugging-port on the default profile directory.
-          # 0.0.0.0 is required so the CDP service can proxy the endpoint.
+          # Note: --remote-debugging-address is deliberately absent - desktop
+          # chromium ignores it and always binds DevTools to 127.0.0.1, which
+          # is why the cdp-proxy sidecar exists.
           CHROME_CLI: >-
             --remote-debugging-port=9222
-            --remote-debugging-address=0.0.0.0
             --user-data-dir=/config/chrome-profile
             --no-first-run
             --no-default-browser-check
@@ -53,6 +54,31 @@ controllers:
             memory: 3Gi
         securityContext:
           readOnlyRootFilesystem: false
+      # L7 front for the CDP endpoint. Desktop chromium ignores
+      # --remote-debugging-address and binds DevTools to 127.0.0.1 only, and
+      # it additionally rejects HTTP Host headers that are not an IP or
+      # localhost - so a plain TCP forward is not enough. nginx rewrites the
+      # Host header, proxies WebSocket upgrades and fixes the
+      # webSocketDebuggerUrl that chromium reports in /json/* responses
+      # (clients such as playwright connect to that URL verbatim).
+      # Config: configMaps.cdp-proxy, mounted via persistence.cdp-proxy-config.
+      cdp-proxy:
+        image:
+          repository: docker.io/library/nginx
+          # Moving tag (nginx stable branch); stable gets security fixes.
+          tag: stable-alpine
+          pullPolicy: IfNotPresent
+        probes:
+          readiness:
+            enabled: true
+            type: tcp
+            port: 9223
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            memory: 128Mi
 
 # The image boots as root so s6-overlay can fix /config ownership, then drops
 # every supervised process to PUID/PGID (env above).
@@ -63,21 +89,72 @@ defaultPodOptions:
 
 persistence:
   # Chromium profile (cookies, sessions, extensions) - the whole point: logins
-  # done through the web UI outlive pod restarts.
+  # done through the web UI outlive pod restarts. Scoped to the main
+  # container only (advancedMounts): the cdp-proxy sidecar has no business
+  # with the profile.
   config:
     enabled: true
     retain: true
     accessMode: ReadWriteOnce
     size: 4Gi
-    globalMounts:
-      - path: /config
+    advancedMounts:
+      main:
+        main:
+          - path: /config
   # The image docs require ~1gb of shm for modern sites.
   shm:
     type: emptyDir
     medium: Memory
     sizeLimit: 1Gi
-    globalMounts:
-      - path: /dev/shm
+    advancedMounts:
+      main:
+        main:
+          - path: /dev/shm
+  # nginx config for the cdp-proxy sidecar, mounted at
+  # /etc/nginx/conf.d/default.conf (replacing the image default).
+  cdp-proxy-config:
+    type: configMap
+    identifier: cdp-proxy
+    advancedMounts:
+      main:
+        cdp-proxy:
+          - path: /etc/nginx/conf.d/default.conf
+            subPath: default.conf
+
+# nginx config for the cdp-proxy sidecar (see
+# controllers.main.containers.cdp-proxy).
+configMaps:
+  cdp-proxy:
+    enabled: true
+    data:
+      default.conf: |
+        map $http_upgrade $connection_upgrade {
+            default upgrade;
+            ''      close;
+        }
+
+        server {
+            listen 9223;
+
+            location / {
+                proxy_pass http://127.0.0.1:9222;
+                proxy_http_version 1.1;
+                # Chromium rejects non-IP/localhost Host headers; 127.0.0.1
+                # also makes it echo that host into webSocketDebuggerUrl,
+                # which the sub_filter below rewrites back for clients.
+                proxy_set_header Host 127.0.0.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection $connection_upgrade;
+                # CDP sessions are long-lived and can sit idle for minutes.
+                proxy_read_timeout 1h;
+                proxy_send_timeout 1h;
+
+                sub_filter_types application/json;
+                sub_filter_once off;
+                sub_filter 'ws://127.0.0.1:9222' 'ws://$http_host';
+                sub_filter 'ws://localhost:9222' 'ws://$http_host';
+            }
+        }
 
 service:
   # Selkies web UI (the browser streamed to a human's browser). Expose through
@@ -93,13 +170,15 @@ service:
         primary: true
   # Chrome DevTools Protocol endpoint for automation (agent browser tools,
   # playwright connect_over_cdp). Cluster-internal by design: never attach an
-  # ingress to this service - CDP has no authentication.
+  # ingress to this service - CDP has no authentication. The port targets the
+  # cdp-proxy sidecar (9223): desktop chromium only listens on 127.0.0.1.
   cdp:
     controller: main
     ports:
       cdp:
         enabled: true
         port: 9222
+        targetPort: 9223
         protocol: HTTP
         primary: true
 
